@@ -46,6 +46,17 @@ dependencies {
 
     // 이미지 썸네일
     implementation 'net.coobird:thumbnailator:0.4.20'
+
+	implementation 'com.twelvemonkeys.imageio:imageio-jpeg:3.12.0'
+	implementation 'com.twelvemonkeys.imageio:imageio-core:3.12.0'
+
+	// H2 db
+	runtimeOnly 'com.h2database:h2'
+
+	//test
+	testImplementation platform('org.testcontainers:testcontainers-bom:1.19.7')
+	testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:minio'
 }
 
 tasks.named('test') {

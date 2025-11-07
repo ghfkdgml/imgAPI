@@ -8,25 +8,31 @@ import org.springframework.stereotype.Service;
 
 import com.project.imgapi.entity.ImageAsset;
 import com.project.imgapi.storage.BlobStorage;
+import com.project.imgapi.enums.ImageStatus;
+
+import jakarta.transaction.Transactional;
+
+import com.project.imgapi.repository.ImageAssetRepository;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
+import java.util.Optional;
 
 @Service
 public class ThumbnailService {
 
-  private final ImageService imageService;
+  private final ImageAssetRepository imageAssetRepo;
   private final BlobStorage storage;
 
-  public ThumbnailService(ImageService imageService, BlobStorage storage) {
-    this.imageService = imageService; this.storage = storage;
+  public ThumbnailService(ImageAssetRepository imageAssetRepo, BlobStorage storage) {
+    this.imageAssetRepo = imageAssetRepo; this.storage = storage;
   }
 
   @Async
   @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2.0))
   public void generateAsync(Long imageId) {
-    ImageAsset a = imageService.findEntity(imageId).orElseThrow();
+    ImageAsset a = findEntity(imageId).orElseThrow();
     try {
       // 원본 다운로드
       URL url = storage.presignGet(a.getObjectKey(), 300);
@@ -51,12 +57,33 @@ public class ThumbnailService {
         byte[] bytes = baos.toByteArray();
         try (InputStream tin = new ByteArrayInputStream(bytes)) {
           String key = storage.putObject("thumbnail/%d".formatted(a.getProject().getId()),"image/jpeg", bytes.length, tin);
-          imageService.setThumbnailReady(imageId, key);
+          setThumbnailReady(imageId, key);
         }
       }
     } catch (Exception e) {
-      imageService.setThumbnailFailed(imageId);
-      throw new RuntimeException(e);
+        setThumbnailFailed(imageId);
+        throw new RuntimeException(e);
     }
+  }
+
+  
+  @Transactional
+  public Optional<ImageAsset> findEntity(Long id){ 
+      return imageAssetRepo.findByIdAndSoftDeleteFalse(id); 
+  }
+
+  @Transactional
+  public void setThumbnailReady(Long id, String thumbnailKey){
+      ImageAsset a = imageAssetRepo.findByIdAndSoftDeleteFalse(id).orElseThrow();
+
+      a.setThumbnailKey(thumbnailKey);
+      a.setStatus(ImageStatus.READY);
+  }
+
+  @Transactional
+  public void setThumbnailFailed(Long id){
+      ImageAsset a = imageAssetRepo.findByIdAndSoftDeleteFalse(id).orElseThrow();
+
+      a.setStatus(ImageStatus.FAILED);
   }
 }
