@@ -41,7 +41,7 @@ import com.project.imgapi.service.ImageService;
 @ActiveProfiles("test")
 public class ImageIntegrationTest {
     @Container
-    static GenericContainer<?> minio = new GenericContainer<>("quay.io/minio/minio:RELEASE.2024-10-02T17-50-41Z")
+    static GenericContainer<?> minio = new GenericContainer("quay.io/minio/minio:RELEASE.2024-10-02T17-50-41Z")
             .withEnv("MINIO_ROOT_USER", "minioadmin")
             .withEnv("MINIO_ROOT_PASSWORD", "minioadmin")
             .withEnv("MINIO_DOMAIN", "127.0.0.1.nip.io")
@@ -87,8 +87,7 @@ public class ImageIntegrationTest {
             g.setColor(java.awt.Color.RED);
             g.drawString("IT", 10, 20);
         } finally { g.dispose(); }
-
-        // (선택) TwelveMonkeys가 classpath에 있으면 progressive/메타도 쓸 수 있음
+        
         var baos = new java.io.ByteArrayOutputStream();
         javax.imageio.ImageIO.write(img, "jpg", baos);
         return baos.toByteArray();
@@ -147,7 +146,7 @@ public class ImageIntegrationTest {
     @Timeout(60)
     @DisplayName("동일 바이트 2회 업로드 → 중복 0건 보장")
     void duplicate_upload_prevented() throws Exception {
-        byte[] same = randomBytes(64 * 1024);
+        byte[] same = validJpegBytes(320, 240);
         MockMultipartFile f1 = new MockMultipartFile("files", "dup.jpg", "image/jpeg", same);
         MockMultipartFile f2 = new MockMultipartFile("files", "dup.jpg", "image/jpeg", same);
 
@@ -159,10 +158,37 @@ public class ImageIntegrationTest {
         int c1 = objectMapper.readTree(r1).get("ids").size();
         int c2 = objectMapper.readTree(r2).get("ids").size();
 
-        // 서비스에서 "이미 존재하면 skip" 정책으로 구현했다면 두 번째 업로드 ids.size() 가 0일 수 있음
-        // 또는 unique 제약 충돌 시 예외 처리로 0건만 반환하도록 구현했는지 정책에 맞게 검증
         assertThat(c1).isGreaterThanOrEqualTo(1);
-        assertThat(c2).isBetween(0, 1); // 정책에 따라 조정
+        assertThat(c2).isBetween(0, 1);
     }
+
+    // @Test
+    // @DisplayName("업로드 후 파일 존재 여부까지 E2E 검증")
+    // void upload_and_verify_storage() throws Exception {
+    //     // 1) 업로드
+    //     byte[] payload = validJpegBytes(300, 200);
+    //     MockMultipartFile file = new MockMultipartFile("files", "img.jpg", "image/jpeg", payload);
+
+    //     String res = mvc.perform(
+    //             multipart("/projects/{pid}/images", 1L).file(file)
+    //     ).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+    //     long imgId = objectMapper.readTree(res).get("ids").get(0).asLong();
+
+    //     // 2) 이미지 상세 조회하여 key 추출
+    //     String detail = mvc.perform(
+    //             get("/images/{id}", imgId).param("expirySec", "120")
+    //     ).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+    //     String key = objectMapper.readTree(detail).get("objectKey").asText();
+    //     String bucket = "image-bucket-it";
+
+    //     // 3) MinIO 실제 저장 확인 (S3 HeadObject)
+    //     s3Client.headObject(b -> b.bucket(bucket).key(key)); // 없으면 예외 던짐
+
+    //     // 4) S3에서 다시 다운로드
+    //     byte[] stored = s3Client.getObject(b -> b.bucket(bucket).key(key)).readAllBytes();
+    //     assertThat(stored).isNotEmpty();
+    // }
 
 }
