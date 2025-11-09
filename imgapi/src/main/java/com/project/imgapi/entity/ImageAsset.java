@@ -10,18 +10,23 @@ import java.time.Instant;
 import com.project.imgapi.enums.ImageStatus;
 
 @Entity
-@Getter // 모든 필드에 대한 Getter 자동 생성
-@Setter // 모든 필드에 대한 Setter 자동 생성
+@Getter
+@Setter
 @NoArgsConstructor
-@Table(name="image_asset",
+@Table(
+  name = "image_asset",
   indexes = {
-    @Index(name="idx_project_id_id_desc", columnList = "project_id,id DESC"),
-    @Index(name="idx_project_status_id", columnList = "project_id,status,id DESC"),
-    @Index(name="idx_tags", columnList = "tags")
+    @Index(
+      name = "idx_project_softdel_status_id_desc",
+      columnList = "project_id, soft_delete, status, id DESC"
+    ),
+    @Index(name = "idx_tags", columnList = "tags")
   },
   uniqueConstraints = {
-    // (projectId, contentHash) 중복 방지
-    @UniqueConstraint(name="uk_project_hash", columnNames = {"project_id", "content_hash"})
+    @UniqueConstraint(
+      name = "uk_project_hash",
+      columnNames = {"project_id", "content_hash"}
+    )
   }
 )
 public class ImageAsset {
@@ -52,7 +57,7 @@ public class ImageAsset {
     @Column(nullable=false) 
     private boolean softDelete = false;
 
-    private String tags;       // 간단 예시(CSV). 대규모라면 별도 테이블 권장
+    private String tags;
     private String memo;
 
     @Version private Long version;

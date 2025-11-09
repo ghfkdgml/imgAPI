@@ -26,13 +26,12 @@ public interface ImageAssetRepository extends JpaRepository<ImageAsset, Long> {
 
   // Cursor (id DESC, lastId 커서)
   @Query("""
-   select i from ImageAsset i
-   where i.project.id = :projectId
-     and i.softDelete = false
-     and (:status is null or i.status = :status)
-     and (:tags is null or lower(i.tags) like lower(concat('%', :tags, '%')))
-     and (:lastId is null or i.id < :lastId)
-   order by i.id desc
+    select i from ImageAsset i
+    where i.project.id = :projectId
+      and i.softDelete = false
+      and (:status is null or i.status = :status)
+      and (:lastId is null or i.id < :lastId)
+    order by i.id desc
   """)
   List<ImageAsset> scanDesc(@Param("projectId") Long projectId,
                             @Param("status") ImageStatus status,
