@@ -2,8 +2,11 @@ package com.project.imgapi.perf;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Duration;
 import java.util.List;
@@ -13,11 +16,15 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @SpringBootApplication
+@ActiveProfiles("perf")
 @EnableConfigurationProperties(PerfProperties.class)
 public class PerfRunnerApplication implements CommandLineRunner {
 
     public static void main(String[] args) {
-        SpringApplication.run(PerfRunnerApplication.class, args);
+        new SpringApplicationBuilder(PerfRunnerApplication.class)
+        .profiles("perf")                            // perf 프로필 사용
+        .web(WebApplicationType.NONE)                // 웹 서버 비활성화
+        .run(args);
     }
 
     @Override

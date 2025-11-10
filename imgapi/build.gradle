@@ -68,3 +68,12 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.register('runPerf', JavaExec) {
+    group = 'application'
+    description = 'Run PerfRunnerApplication from test sources'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.project.imgapi.perf.PerfRunnerApplication'
+    // perf 프로필로 실행
+    systemProperty 'spring.profiles.active', 'perf'
+}
