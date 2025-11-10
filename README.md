@@ -83,8 +83,7 @@ http://localhost:8080/swagger-ui/index.html
 ## ✅ 4.1 PerfRunner 실행
 
 ```bash
-./gradlew test --tests "com.project.imgapi.perf.PerfRunnerApplication"
+./gradlew bootRun
 ```
 
-또는
-IDE에서 PerfRunnerApplication 실행.
+서버 실행한 후 IDE에서 PerfRunnerApplication 실행.
