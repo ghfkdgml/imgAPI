@@ -38,13 +38,14 @@ public class S3BlobStorage implements BlobStorage {
         .region(Region.of(region))
         .credentialsProvider(StaticCredentialsProvider.create(creds))
         .endpointOverride(java.net.URI.create(endpoint))
-        .serviceConfiguration(conf)
+        .forcePathStyle(true)
         .build();
 
     this.presigner = S3Presigner.builder()
         .region(Region.of(region))
         .credentialsProvider(StaticCredentialsProvider.create(creds))
         .endpointOverride(java.net.URI.create(endpoint))
+        .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
         .build();
 
     this.bucket = bucket;
